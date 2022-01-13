@@ -14,24 +14,25 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-class IST7789Pin
-{
+class IST7789Pin {
 public:
     virtual void Set(void) = 0;
     virtual void Reset(void) = 0;
 };
 
-class IST7789Spi
-{
+class IST7789Spi {
 public:
-    virtual void Write(const uint8_t byte) = 0;
-    virtual void Write(const uint8_t* buffer, size_t size) = 0;
+	virtual void Write(const uint8_t byte) = 0;
+	virtual void Write(const uint8_t* buffer, size_t size) {
+		for(size_t i = 0; i < size; i++) {
+			Write(buffer[i]);
+		}
+	}
 };
 
-class ST7789
-{
+class ST7789 {
 public:
-    ST7789(IST7789Spi& spi, IST7789Pin& rstPin, IST7789Pin& dcPin, uint8_t* buf);
+    ST7789(IST7789Spi& spi, IST7789Pin& rstPin, IST7789Pin& dcPin, uint16_t width, uint16_t height, uint8_t* buf);
 
     static void Task1ms(void);
 
@@ -39,17 +40,16 @@ public:
     void RefreshDisplay(void);
     void SetPixel(int16_t x, int16_t y, uint16_t color);
 private:
-    enum class Command : uint8_t
-    {
-        SoftwareReset           = 0x01,
-        SleepOut                = 0x11,
-        InversionOn             = 0x21,
-        DisplayOn               = 0x29,
-        ColumnAddressSet        = 0x2A,
-        RowAddressSet           = 0x2B,
-        MemoryWrite             = 0x2C,
-        InterfacePixelFormat    = 0x3A,
-        WriteMemoryContinue     = 0x3C,
+    enum class Command : uint8_t {
+        SwRst		= 0x01,
+        SleepOut        = 0x11,
+        InversionOn     = 0x21,
+        DisplayOn       = 0x29,
+        ColAddrSet      = 0x2A,
+        RowAddrSet      = 0x2B,
+        MemWrite        = 0x2C,
+        IfPixFmt	= 0x3A,
+        WriteMemCont	= 0x3C,
     };
 
     static constexpr uint8_t MinimumResetPulseTime_ms { 10u };
@@ -58,6 +58,7 @@ private:
     IST7789Spi& spi;
     IST7789Pin& resetPin;
     IST7789Pin& dataCommandPin;
+    uint16_t width, height;
     uint8_t* buffer;
 
     volatile static uint32_t Timer_ms;
@@ -70,7 +71,7 @@ private:
     void SetWindow(void);
     void SetColorMode(void);
     void SetScreenSize(uint16_t height, uint16_t width);
-    void Wait(uint32_t ms);  
+    virtual void Wait(uint32_t ms) = 0;
 
     void SendTestData(void);
 
