@@ -51,7 +51,7 @@ void ST7789::Init(void) {
     DisplayOn();
     SetScreenSize(width, height);
 
-    SendTestData();
+    // SendTestData();
 }
 
 void ST7789::RefreshDisplay(void) {
@@ -120,20 +120,20 @@ void ST7789::SendTestData(void) {
 
     for(uint32_t i = 0u; i < width*height; i++) {
         WriteData(RGB565 >> 8);
-        WriteData(RGB565 & 0xFF);
+        WriteData(RGB565);
     }
 
     WriteCommand(Command::MemWrite);
 
     for(uint32_t i = 0u; i < width*height; i++) {
         WriteData(RGB565_2 >> 8);
-        WriteData(RGB565_2 & 0xFF);
+        WriteData(RGB565_2);
     }
 
     WriteCommand(Command::MemWrite);
     for(uint32_t i = 0u; i < width*height; i++) {
         WriteData(RGB565_3 >> 8);
-        WriteData(RGB565_3 & 0xFF);
+        WriteData(RGB565_3);
     }
 }
 
