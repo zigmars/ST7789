@@ -41,6 +41,7 @@ public:
     void SetPixel(int16_t x, int16_t y, uint16_t color);
     uint16_t getWidth() { return width; }
     uint16_t getHeight() { return height; }
+    uint16_t* getBuffer() { return (uint16_t*)buffer; }
 private:
     enum class Command : uint8_t {
         SwRst           = 0x01,
@@ -61,9 +62,7 @@ private:
     IST7789Pin& resetPin;
     IST7789Pin& dataCommandPin;
     uint16_t width, height;
-  public:
     uint8_t* buffer;
-  private:
 
     volatile static uint32_t Timer_ms;
 
