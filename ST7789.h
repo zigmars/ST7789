@@ -39,17 +39,19 @@ public:
     void Init(void);
     void RefreshDisplay(void);
     void SetPixel(int16_t x, int16_t y, uint16_t color);
+    uint16_t getWidth() { return width; }
+    uint16_t getHeight() { return height; }
 private:
     enum class Command : uint8_t {
-        SwRst		= 0x01,
+        SwRst           = 0x01,
         SleepOut        = 0x11,
         InversionOn     = 0x21,
         DisplayOn       = 0x29,
         ColAddrSet      = 0x2A,
         RowAddrSet      = 0x2B,
         MemWrite        = 0x2C,
-        IfPixFmt	= 0x3A,
-        WriteMemCont	= 0x3C,
+        IfPixFmt        = 0x3A,
+        WriteMemCont    = 0x3C,
     };
 
     static constexpr uint8_t MinimumResetPulseTime_ms { 10u };
@@ -59,7 +61,9 @@ private:
     IST7789Pin& resetPin;
     IST7789Pin& dataCommandPin;
     uint16_t width, height;
+  public:
     uint8_t* buffer;
+  private:
 
     volatile static uint32_t Timer_ms;
 
