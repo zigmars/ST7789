@@ -11,22 +11,19 @@
 #include "ST7789.h"
 
 #include <type_traits>
+#include <cstring>
 
 template <typename E>
 constexpr auto etoi(E const value) {
     return static_cast<std::underlying_type_t<E>>(value);
 }
 
-volatile uint32_t ST7789::Timer_ms { 0u };
+template <uint16_t width, uint16_t height>
+ST7789<width, height>::ST7789(IST7789Spi& spi, IST7789Pin& rstPin, IST7789Pin& dcPin)
+: spi(spi), resetPin(rstPin), dataCommandPin(dcPin) {}
 
-ST7789::ST7789(IST7789Spi& spi, IST7789Pin& rstPin, IST7789Pin& dcPin, uint16_t w, uint16_t h, uint8_t* buf)
-: spi(spi), resetPin(rstPin), dataCommandPin(dcPin), width(w), height(h), buffer(buf) {}
-
-void ST7789::Task1ms(void) {
-    Timer_ms++;
-}
-
-void ST7789::SetPixel(int16_t x, int16_t y, uint16_t color) {
+template <uint16_t width, uint16_t height>
+void ST7789<width,height>::SetPixel(int16_t x, int16_t y, uint16_t color) {
     WriteCommand(Command::ColAddrSet);
     WriteData(x >> 8);
     WriteData(x);
@@ -42,55 +39,63 @@ void ST7789::SetPixel(int16_t x, int16_t y, uint16_t color) {
     WriteData(color);
 }
 
-void ST7789::Init(void) {
+template <uint16_t width, uint16_t height>
+void ST7789<width,height>::Init() {
     Reset();
     SoftwareReset();
     SleepOut();
     SetColorMode();
     InversionOn();
     DisplayOn();
-    SetScreenSize(width, height);
-
-    // SendTestData();
+    SendScreenSize();
+    memset(buffer, 0, width * height * 2);
 }
 
-void ST7789::RefreshDisplay(void) {
-    SetScreenSize(width, height);
+template <uint16_t width, uint16_t height>
+void ST7789<width,height>::Refresh(void) {
+    SendScreenSize();
     WriteCommand(Command::MemWrite);
-    WriteData(buffer, width*height*2);
+    WriteData((uint8_t*)buffer, width*height*2);
 }
 
-void ST7789::Reset(void) {
+template <uint16_t width, uint16_t height>
+void ST7789<width,height>::Reset(void) {
     resetPin.Reset();
     Wait(MinimumResetPulseTime_ms);
     resetPin.Set();
     Wait(MaximumBlankingTime_ms);
 }
 
-void ST7789::SoftwareReset(void) {
+template <uint16_t width, uint16_t height>
+void ST7789<width,height>::SoftwareReset(void) {
     WriteCommand(Command::SwRst);
     Wait(120);
 }
 
-void ST7789::SleepOut(void) {
+template <uint16_t width, uint16_t height>
+void ST7789<width,height>::SleepOut(void) {
     WriteCommand(Command::SleepOut);
     Wait(120);
 }
 
-void ST7789::InversionOn(void) {
+template <uint16_t width, uint16_t height>
+void ST7789<width,height>::InversionOn(void) {
     WriteCommand(Command::InversionOn);
 }
 
-void ST7789::DisplayOn(void) {
+template <uint16_t width, uint16_t height>
+void ST7789<width,height>::DisplayOn(void) {
     WriteCommand(Command::DisplayOn);
 }
 
-void ST7789::SetColorMode(void) {
+template <uint16_t width, uint16_t height>
+void ST7789<width,height>::SetColorMode(void) {
     WriteCommand(Command::IfPixFmt);
     WriteData(0x55);
 }
 
-void ST7789::SetScreenSize(uint16_t width, uint16_t height) {
+template <uint16_t width, uint16_t height>
+void ST7789<width,height>::SendScreenSize() {
     WriteCommand(Command::ColAddrSet);
     WriteData(0x00);
     WriteData(0x00);
@@ -100,18 +105,11 @@ void ST7789::SetScreenSize(uint16_t width, uint16_t height) {
     WriteData(0x00);
     WriteData(0x00);
     WriteData((height-1) >> 8);
-    WriteData(height-1);
+    WriteData((height-1)&255);
 }
 
-// void ST7789::Wait(uint32_t ms) {
-//     uint32_t endTime = Timer_ms + ms;
-
-//     while(Timer_ms < endTime) {
-//         // Wait for them time to pass
-//     }
-// }
-
-void ST7789::SendTestData(void) {
+template <uint16_t width, uint16_t height>
+void ST7789<width,height>::SendTestData(void) {
     uint16_t RGB565 = 0x07E0;
     uint16_t RGB565_2 = 0xE463;
     uint16_t RGB565_3  = 0xF800;
@@ -137,17 +135,22 @@ void ST7789::SendTestData(void) {
     }
 }
 
-void ST7789::WriteData(uint8_t data) {
+template <uint16_t width, uint16_t height>
+void ST7789<width,height>::WriteData(uint8_t data) {
     dataCommandPin.Set();
     spi.Write(data);
 }
 
-void ST7789::WriteData(const uint8_t* buffer, size_t size) {
+template <uint16_t width, uint16_t height>
+void ST7789<width,height>::WriteData(const uint8_t* buf, size_t size) {
     dataCommandPin.Set();
-    spi.Write(buffer, size);
+    spi.Write(buf, size);
 }
 
-void ST7789::WriteCommand(Command command) {
+template <uint16_t width, uint16_t height>
+void ST7789<width,height>::WriteCommand(Command command) {
     dataCommandPin.Reset();
     spi.Write(etoi(command));
 }
+
+template class ST7789<240, 320>;

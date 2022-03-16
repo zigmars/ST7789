@@ -30,19 +30,20 @@ public:
 	}
 };
 
+template <uint16_t width, uint16_t height>
 class ST7789 {
 public:
-    ST7789(IST7789Spi& spi, IST7789Pin& rstPin, IST7789Pin& dcPin, uint16_t width, uint16_t height, uint8_t* buf);
+    ST7789(IST7789Spi& spi, IST7789Pin& rstPin, IST7789Pin& dcPin);
 
-    static void Task1ms(void);
-
-    void Init(void);
-    void RefreshDisplay(void);
+    void Init();
+    void Refresh(void);
     void SetPixel(int16_t x, int16_t y, uint16_t color);
-    uint16_t getWidth() { return width; }
-    uint16_t getHeight() { return height; }
-    uint16_t* getBuffer() { return (uint16_t*)buffer; }
-private:
+    constexpr uint16_t getWidth() const { return width; }
+    constexpr uint16_t getHeight() const { return height; }
+    uint16_t* getBuffer() const { return (uint16_t*)buffer; }
+  protected:
+    uint16_t buffer[width*height];
+  private:
     enum class Command : uint8_t {
         SwRst           = 0x01,
         SleepOut        = 0x11,
@@ -61,10 +62,6 @@ private:
     IST7789Spi& spi;
     IST7789Pin& resetPin;
     IST7789Pin& dataCommandPin;
-    uint16_t width, height;
-    uint8_t* buffer;
-
-    volatile static uint32_t Timer_ms;
 
     void Reset(void);
     void SoftwareReset(void);
@@ -73,7 +70,7 @@ private:
     void DisplayOn(void);
     void SetWindow(void);
     void SetColorMode(void);
-    void SetScreenSize(uint16_t height, uint16_t width);
+    void SendScreenSize();
     virtual void Wait(uint32_t ms) = 0;
 
     void SendTestData(void);
@@ -81,7 +78,6 @@ private:
     void WriteData(uint8_t data);
     void WriteData(const uint8_t* data, size_t size);
     void WriteCommand(Command command);
-
 };
 
 #endif // ST7789_H
