@@ -8,7 +8,7 @@
  * may obtain a copy of the License at:
  *                  opensource.org/licenses/BSD-3-Clause
  ****************************************************************/
-#include "ST7789.h"
+#include "st7789.h"
 
 #include <type_traits>
 #include <cstring>
